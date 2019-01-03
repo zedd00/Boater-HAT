@@ -384,11 +384,15 @@ echo "" >> ~/cheat-sheet.txt
 echo "Watchtower" >> ~/cheat-sheet.txt
 echo "	Updates and restarts containers when a new image is released" >> ~/cheat-sheet.txt
 
+#### Container Modifications ####
+
+# Remove ReverseProxyPrefix from Ubooquity
+sed -i 's/ubooquity//g' /var/lib/docker/volumes/ubooquity/_data/preferences.json
+docker restart ubooquity
 
 
 echo "Please open the following pages and create passwords immediatly. These are externally exposed, so should have secure passwords."
 echo "Portainer is available at $hostip:8001 or https://port.$extdomain"
-echo "LazyLibrarian is available at $hostip:8005 or https://lazy.$extdomain"
 echo "Ombi is available at $hostip:8009 or https://ombi.$extdomain"
 echo "HTPC Manager is available at $hostip:8010 or https://htpc.$extdomain"
 echo "Airsonic is available at $hostip:8016 or https://music.$extdomain"
