@@ -92,6 +92,12 @@ then
 				read -p  'Username: ' meduser
 				echo "What is the password for that user?"
 				read -s  medpass
+				echo "Who is your vpn provider"
+				read -p  'Check https://hub.docker.com/r/haugene/transmission-openvpn for a list of supported providers : ' vpnprovider;
+				echo "What is your username for the VPN?";
+				read -p  'Username : ' vpnuser;
+				echo "What is the password for your VPN?";
+				read -s vpnpass;
 				echo "Are you ready to continue?"
 				read -p "(y/n)?" choice
 				case "$choice" in 
@@ -154,7 +160,10 @@ then
 	sudo bash -c ' echo "puid=\"'$puid'\"" >> /etc/environment'   
 	sudo bash -c ' echo "pgid=\"'$pgid'\"" >> /etc/environment' 
 	sudo bash -c ' echo "plexname=\"'$plexname'\"" >> /etc/environment'   
-	sudo bash -c ' echo "bcode=\"'$brainzcode'\"" >> /etc/environment'   
+	sudo bash -c ' echo "bcode=\"'$brainzcode'\"" >> /etc/environment'    
+	sudo bash -c ' echo "vpnusr=\"'$vpnuser'\"" >> /etc/environment'     
+	sudo bash -c ' echo "vpnpwd=\"'$vpnpassword'\"" >> /etc/environment'     
+	sudo bash -c ' echo "vpnprv=\"'$vpnprovider'\"" >> /etc/environment'   
 	source /etc/environment
 	echo "Are you ready to reboot?"
 	read -p "(y/n)?" choice
@@ -181,12 +190,6 @@ else
 				echo "A few more settings are needed to continue.";
 				
 			##################### Collect variables ########################
-				echo "Who is your vpn provider"
-				read -p  'Check https://hub.docker.com/r/haugene/transmission-openvpn for a list of supported providers : ' vpnprovider;
-				echo "What is your username for the VPN?";
-				read -p  'Username : ' vpnuser;
-				echo "What is the password for your VPN?";
-				read -s vpnpass;
 				echo "Please go to https://www.plex.tv/claim and get your token";
 				read -p  "Claim Token : " claim_token;
 				echo "Thanks, install continuing.";;
@@ -211,13 +214,13 @@ docker run --name watchtower -v $dsock -d --restart always v2tec/watchtower	--cl
 # Portainer is a web interface for docker, so you can restart containers without the command line
 docker run --name portainer -p 8001:9000 -v $dsock -v portainer:/data -e VIRTUAL_HOST=portainer.$extdomain -e VIRTUAL_PORT=8001 -e LETSENCRYPT_HOST=portainer.$extdomain -e LETSENCRYPT_EMAIL=$lemail --restart always -d portainer/portainer:latest -H unix:///var/run/docker.sock
 # Sonarr finds TV shows
-docker run --name sonarr -p 8002:8989 -e TZ=$TZ -v sonarr:/config -v $tvshare:/tv -v $downloadshare/TV:/downloads -e VIRTUAL_PORT=8002 -e PGID=$pgid -e PUID=$puid --restart always -d --memory="8g" linuxserver/sonarr:latest
+docker run --name sonarr -p 8002:8989 -e TZ=$TZ -v sonarr:/config -v $tvshare:/tv -v $downloadshare:/downloads -e VIRTUAL_PORT=8002 -e PGID=$pgid -e PUID=$puid --restart always -d --memory="8g" linuxserver/sonarr:latest
 # Radarr finds movies
-docker run --name radarr -p 8003:7878 -e TZ=$TZ -v radarr:/config -v $downloadshare/Movies:/downloads -v $mediashare/movies:/movies -e VIRTUAL_PORT=8003 -e PGID=$pgid -e PUID=$puid --restart always -d --memory="8g" linuxserver/radarr:latest
+docker run --name radarr -p 8003:7878 -e TZ=$TZ -v radarr:/config -v $downloadshare:/downloads -v $mediashare/movies:/movies -e VIRTUAL_PORT=8003 -e PGID=$pgid -e PUID=$puid --restart always -d --memory="8g" linuxserver/radarr:latest
 # Lidarr finds music
-docker run --name lidarr -p 8004:8686 -e TZ=$TZ -v lidarr:/config -v $downloadshare/Music:/downloads -v $musicshare:/music -e VIRTUAL_PORT=8004 -d -e PGID=$pgid -e PUID=$puid --restart always --memory="8g" linuxserver/lidarr:latest
+docker run --name lidarr -p 8004:8686 -e TZ=$TZ -v lidarr:/config -v $downloadshare:/downloads -v $musicshare:/music -e VIRTUAL_PORT=8004 -d -e PGID=$pgid -e PUID=$puid --restart always --memory="8g" linuxserver/lidarr:latest
 # Lazy Librarian finds ebooks
-docker run --name lazylibrarian -p 8005:5299 -e TZ=$TZ -v lazylibrarian:/config -v $downloadshare/Books:/downloads -v $bookshare/unsorted:/books -e VIRTUAL_PORT=8005 -e PGID=$pgid -e PUID=$puid -d --restart always --memory="8g" linuxserver/lazylibrarian:latest
+docker run --name lazylibrarian -p 8005:5299 -e TZ=$TZ -v lazylibrarian:/config -v $downloadshare:/downloads -v $bookshare/unsorted:/books -e VIRTUAL_PORT=8005 -e PGID=$pgid -e PUID=$puid -d --restart always --memory="8g" linuxserver/lazylibrarian:latest
 # Hydra2 manages your indexers
 docker run --name=hydra2 -p 8006:5076 -e TZ=$TZ -v hydra2:/config -v $downloadshare:/downloads -e VIRTUAL_HOST=hydra.$extdomain -e VIRTUAL_PORT=8006  -e PGID=$pgid -e PUID=$puid -d --restart always --memory="8g" linuxserver/hydra2:135
 # Jackett manages your torrent indexers
@@ -230,6 +233,8 @@ docker run --name=ombi -p 8009:3579 -e TZ=$TZ -v ombi:/config -e VIRTUAL_HOST=om
 docker run --name=htpc -p 8010:8085 -e TZ=$TZ -v htpc:/config -e VIRTUAL_HOST=htpc.$extdomain -e VIRTUAL_PORT=8010 -e LETSENCRYPT_HOST=htpc.$extdomain -e LETSENCRYPT_EMAIL=$lemail -e PGID=$pgid -e PUID=$puid -d --restart always --memory="8g" linuxserver/htpcmanager:latest	
 # Beets helps organize your music
 docker run --name=beets -p 8011:8337 -v beets:/config -v $downloadshare/Music:/downloads -v $musicshare:/music -e VIRTUAL_PORT=8011 -e PGID=$pgid -e PUID=$puid -d --restart always --memory="8g" linuxserver/beets
+# Transmission + OpenVPN
+docker run --name=torrents -p 8012:9091 -p 51413:51413 --cap-add=NET_ADMIN --device=/dev/net/tun -v $downloadshare:/data -v torrents:/config  -v $downloadshare:/downloads -v $dtime -e OPENVPN_PROVIDER=$vpnprv -e OPENVPN_USERNAME=$vpnusr -e OPENVPN_PASSWORD=$vpnpwd -e WEBPROXY_ENABLED=false -e LOCAL_NETWORK=192.168.1.0/24 --log-driver json-file --log-opt max-size=10m -d --restart always --memory="8g" haugene/transmission-openvpn
 # Glances gives you a web gui for system info
 docker run --name=glances -p 8013-8014:61208-61209 -v $dsock -e GLANCES_OPT="-w" --pid host -it -e VIRTUAL_PORT=8013 -d --restart always --memory="1g" docker.io/nicolargo/glances
 # Musicbrainz helps beets correct mp3 tags
@@ -240,8 +245,7 @@ docker run --name=airsonic -p 8016:4040 -e TZ=$TZ -v airsonic:/config -v $musics
 # Ubooquity allows your friends to read your ebooks and comics
 docker run --name=ubooquity -p 2202:2202 -p 2203:2203 -v ubooquity:/config -v $bookshare:/books -v $comicshare:/comics -v $fileshare:/files -e MAXMEM=8192 -e VIRTUAL_PORT=2202 -e VIRTUAL_HOST=read.$extdomain -e LETSENCRYPT_HOST=read.$extdomain -e LETSENCRYPT_EMAIL=$lemail -e PGID=$pgid -e PUID=$puid -d --restart always --memory="8g" linuxserver/ubooquity:latest
 
-# Transmission + OpenVPN
-docker run --name=torrents -p 9091:9091 -p 51413:51413 --cap-add=NET_ADMIN --device=/dev/net/tun -v $downloadshare:/data -v torrents:/config  -v $dtime -e OPENVPN_PROVIDER=$vpnprovider -e OPENVPN_USERNAME=$vpnuser -e OPENVPN_PASSWORD=$vpnpass -e WEBPROXY_ENABLED=false -e LOCAL_NETWORK=192.168.1.0/24 --log-driver json-file --log-opt max-size=10m -d --restart always --memory="8g" haugene/transmission-openvpn
+
 
 
 # Filebot sorts movies. This job runs at 9AM Wednesday, sorts movies into movies/genre/name/name.ext then deletes anything left in the unsorted folder
@@ -321,6 +325,10 @@ echo "" >> ~/cheat-sheet.txt
 echo "Jackett" >> ~/cheat-sheet.txt 
 echo "	Manages Torrent Indexers" >> ~/cheat-sheet.txt
 echo "	http://$hostip:8007" >> ~/cheat-sheet.txt 
+echo "	Once you add the indexers in jacket, use $hostip/api/v2.0/indexers/all/results/torznab/api as your indexer in Sonarr, Radarr, Lidarr, and LazyLibrarian" >> ~/cheat-sheet.txt 
+echo "	Make sure advanced is enabled if the test to add indxer is failing" >> ~/cheat-sheet.txt 
+echo "	$hostip/api/v2.0/indexers/all/results/torznab/api" >> ~/cheat-sheet.txt
+awk '/APIKey/' /var/lib/docker/volumes/jackett/_data/Jackett/ServerConfig.json >> ~/cheat-sheet.txt 
 
 echo "" >> ~/cheat-sheet.txt 
 echo "NZBGet" >> ~/cheat-sheet.txt 
@@ -341,6 +349,12 @@ echo "" >> ~/cheat-sheet.txt
 echo "Beets" >> ~/cheat-sheet.txt 
 echo "	Fixes MP3 tags" >> ~/cheat-sheet.txt
 echo "	http://$hostip:8011" >> ~/cheat-sheet.txt 
+
+echo "" >> ~/cheat-sheet.txt 
+echo "Torrents" >> ~/cheat-sheet.txt 
+echo "	Torrent Downloader with OpenVPN built in" >> ~/cheat-sheet.txt
+echo "	http://$hostip:8012" >> ~/cheat-sheet.txt 
+echo "	Change the Download to setting to /downloads" >> ~/cheat-sheet.txt 
 
 echo "" >> ~/cheat-sheet.txt 
 echo "Glances" >> ~/cheat-sheet.txt 
@@ -366,11 +380,6 @@ echo "" >> ~/cheat-sheet.txt
 echo "Ubooquity Administration" >> ~/cheat-sheet.txt 
 echo "	Admin interface for Ubooquity" >> ~/cheat-sheet.txt
 echo "	http://$hostip:2203/admin " >> ~/cheat-sheet.txt 
-
-echo "" >> ~/cheat-sheet.txt 
-echo "Torrents" >> ~/cheat-sheet.txt 
-echo "	Torrent Downloader with OpenVPN built in" >> ~/cheat-sheet.txt
-echo "	http://$hostip:9091" >> ~/cheat-sheet.txt 
 
 echo "" >> ~/cheat-sheet.txt 
 echo "Nginx-proxy" >> ~/cheat-sheet.txt
