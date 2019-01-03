@@ -234,7 +234,7 @@ docker run --name=htpc -p 8010:8085 -e TZ=$TZ -v htpc:/config -e VIRTUAL_HOST=ht
 # Beets helps organize your music
 docker run --name=beets -p 8011:8337 -v beets:/config -v $downloadshare/Music:/downloads -v $musicshare:/music -e VIRTUAL_PORT=8011 -e PGID=$pgid -e PUID=$puid -d --restart always --memory="8g" linuxserver/beets
 # Transmission + OpenVPN
-docker run --name=torrents -p 8012:9091 -p 51413:51413 --cap-add=NET_ADMIN --device=/dev/net/tun -v $downloadshare:/data -v torrents:/config  -v $downloadshare:/downloads -v $dtime -e OPENVPN_PROVIDER=$vpnprv -e OPENVPN_USERNAME=$vpnusr -e OPENVPN_PASSWORD=$vpnpwd -e WEBPROXY_ENABLED=false -e LOCAL_NETWORK=192.168.1.0/24 --log-driver json-file --log-opt max-size=10m -d --restart always --memory="8g" haugene/transmission-openvpn
+docker run --name=torrents -p 8012:9091 -p 51413:51413 --cap-add=NET_ADMIN --device=/dev/net/tun -v torrents-data:/data -v torrents:/config -v $downloadshare:/downloads -v $dtime -e TRANSMISSION_DOWNLOAD_DIR=/downloads -e TRANSMISSION_INCOMPLETE_DIR=/downloads/incomplete -e OPENVPN_PROVIDER=$vpnprv -e OPENVPN_USERNAME=$vpnusr -e OPENVPN_PASSWORD=$vpnpwd -e WEBPROXY_ENABLED=false -e LOCAL_NETWORK=192.168.1.0/24 --log-driver json-file --log-opt max-size=10m -d --restart always --memory="8g" haugene/transmission-openvpn
 # Glances gives you a web gui for system info
 docker run --name=glances -p 8013-8014:61208-61209 -v $dsock -e GLANCES_OPT="-w" --pid host -it -e VIRTUAL_PORT=8013 -d --restart always --memory="1g" docker.io/nicolargo/glances
 # Musicbrainz helps beets correct mp3 tags
