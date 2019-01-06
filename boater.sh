@@ -200,7 +200,7 @@ else
 	pnid="$(id -nu)"
 	sudo chown -R $pnid:docker /var/lib/docker/volumes	
 # Plex allows your friends to share your movies, music, and TV
-docker run --name plex -p 32400:32400 -e TZ=$TZ --network=host -h $plexname -v plex:/config -v plex-temp:/transcode -v $mediashare:/data -v $musicshare:/muxic -e PLEX_CLAIM=$claimtoken -d --restart always --memory="24g" plexinc/pms-docker:latest	
+docker run --name plex -p 32400:32400 -e TZ=$TZ --network=host -h $plexname -v plex:/config -v plex-temp:/transcode -v $mediashare:/data -v $musicshare:/muxic -e PLEX_CLAIM=$claimtoken -d --restart always --memory="24g" -e PLEX_UID=$puid -e PLEX_GID=$pgid plexinc/pms-docker:latest	
 
 # Install nginx reverse proxy to redirect traffic to the correct docker containers
 docker run --name nginx-proxy -p 80:80 -p 443:443 -v nginx-config:/etc/nginx/conf.d -v ~/certs:/etc/nginx/certs -v nginx-vhost:/etc/nginx/vhost.d -v nginx-html:/usr/share/nginx/html -v nginx-dhparam:/etc/nginx/dhparam -v /var/run/docker.sock:/tmp/docker.sock:ro -e ENABLE_IPV6=false --label com.github.jrcs.letsencrypt_nginx_proxy_companion.nginx_proxy=true -d --restart always jwilder/nginx-proxy
@@ -234,7 +234,7 @@ docker run --name=htpc -p 8010:8085 -e TZ=$TZ -v htpc:/config -e VIRTUAL_HOST=ht
 # Beets helps organize your music
 docker run --name=beets -p 8011:8337 -v beets:/config -v $downloadshare/Music:/downloads -v $musicshare:/music -e VIRTUAL_PORT=8011 -e PGID=$pgid -e PUID=$puid -d --restart always --memory="8g" linuxserver/beets
 # Transmission + OpenVPN
-docker run --name=torrents -p 8012:9091 -p 51413:51413 --cap-add=NET_ADMIN --device=/dev/net/tun -v torrents-data:/data -v torrents:/config -v $downloadshare:/downloads -v $dtime -e TRANSMISSION_DOWNLOAD_DIR=/downloads -e TRANSMISSION_INCOMPLETE_DIR=/downloads/incomplete -e OPENVPN_PROVIDER=$vpnprv -e OPENVPN_USERNAME=$vpnusr -e OPENVPN_PASSWORD=$vpnpwd -e WEBPROXY_ENABLED=false -e LOCAL_NETWORK=192.168.1.0/24 --log-driver json-file --log-opt max-size=10m -d --restart always --memory="8g" haugene/transmission-openvpn
+docker run --name=torrents -p 8012:9091 -p 51413:51413 --cap-add=NET_ADMIN --device=/dev/net/tun -v torrents-data:/data -v torrents:/config -v $downloadshare:/downloads -v $dtime -e TRANSMISSION_DOWNLOAD_DIR=/downloads -e TRANSMISSION_INCOMPLETE_DIR=/downloads/incomplete -e OPENVPN_PROVIDER=$vpnprv -e OPENVPN_USERNAME=$vpnusr -e OPENVPN_PASSWORD=$vpnpwd -e WEBPROXY_ENABLED=false -e LOCAL_NETWORK=192.168.1.0/24 -e TRANSMISSION_WEB_UI=kettu --log-driver json-file --log-opt max-size=10m -d --restart always --memory="8g" haugene/transmission-openvpn
 # Glances gives you a web gui for system info
 docker run --name=glances -p 8013-8014:61208-61209 -v $dsock -e GLANCES_OPT="-w" --pid host -it -e VIRTUAL_PORT=8013 -d --restart always --memory="1g" docker.io/nicolargo/glances
 # Musicbrainz helps beets correct mp3 tags
@@ -244,9 +244,6 @@ docker run --name=airsonic -p 8016:4040 -e TZ=$TZ -v airsonic:/config -v $musics
 ############## Weird stuff that breaks if it's not on the right port ##############
 # Ubooquity allows your friends to read your ebooks and comics
 docker run --name=ubooquity -p 2202:2202 -p 2203:2203 -v ubooquity:/config -v $bookshare:/books -v $comicshare:/comics -v $fileshare:/files -e MAXMEM=8192 -e VIRTUAL_PORT=2202 -e VIRTUAL_HOST=read.$extdomain -e LETSENCRYPT_HOST=read.$extdomain -e LETSENCRYPT_EMAIL=$lemail -e PGID=$pgid -e PUID=$puid -d --restart always --memory="8g" linuxserver/ubooquity:latest
-
-
-
 
 # Filebot sorts movies. This job runs at 9AM Wednesday, sorts movies into movies/genre/name/name.ext then deletes anything left in the unsorted folder
 docker pull jorrin/filebot-cli
@@ -410,38 +407,4 @@ echo "NZBGet's defaults are login:nzbget, password:tegbzn6789"
 echo "There is other useful config information at ~/cheat-sheet.txt"
 
 fi
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
